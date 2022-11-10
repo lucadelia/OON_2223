@@ -24,7 +24,7 @@ class Node:
 
         # Si definiscono tutti i SETTER
         @label.setter
-        def signal_power(self, label_value):
+        def label(self, label_value):
             self._label = label_value
 
         @noise_power.setter
