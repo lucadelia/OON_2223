@@ -1,2 +1,4 @@
 # OON_2223
-Laboratori di Open Optical Network (OON)
+Laboratories of Open Optical Network (OON) - Software abstraction of an optical network in Python.
+
+Author: Luca D'Elia
