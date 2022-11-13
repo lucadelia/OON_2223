@@ -51,12 +51,12 @@ class SignalInformation:
             self.latency += value
 
         def update_path(self):
-            self.path = self.path[1:]   # if I call this method the path is updated and the new path stats from the
+            self.path = self.path[1:]   # if I call this method, the path is updated and the new path stats from the
                                         # position '1'. The position '1' became the new position '0'. All other position
-                                        # of the path remain stored.
+                                        # of the path remain stored following the newest position.
 
 
         #def increment_path(self):
         #    self.path.pop(0)
-        #Richiamando il path avremo il path, ma richiamando questo metodo poppiamo via l'elemento 0, ovvero
-        #quello attuale, perciò richiamando nuovamente si otterrà quello successivo definito.
+        # Richiamando questo metodo poppiamo via l'elemento 0, ovvero quello attuale, perciò richiamando nuovamente
+        # si otterrà quello successivo definito.
