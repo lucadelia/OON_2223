@@ -37,7 +37,7 @@ class Line:
         return latency
 
     def noise_generation(self, signal_power):
-        noise = 1 ** (-9) * signal_power * self._length
+        noise = (10 ** (-9)) * signal_power * self._length
         return noise
 
     # Define a propagate method that update the signal information and call the successive element propagate method.
@@ -55,6 +55,6 @@ class Line:
         line_node = self.successive[signal_information.path[0]]
         # the first node of the path of the signal is stored thanks to the "successive" method
         # so the first node of the line is defined.
-        signal_information = line_node.propagate(
-            signal_information)  # Ricorsivity of the function "propagate", return the value passed
+        signal_information = line_node.propagate(signal_information)  # Recursivity of the function "propagate",
+        # return the value passed
         return signal_information

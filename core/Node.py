@@ -42,11 +42,9 @@ class Node:
     # Define a propagate method that update a signal_information object modifying its path -------------------------
     # attribute and call the successive one.
 
-    def propagate(self, signal_information):  # node.propagate(signal_information) begin "propagate" for the node
-        actual_path = signal_information.path  # saves actual path of the signal_inf in the variable "actual_path"
-        if len(actual_path) > 1:  # condition to break the recursivity -> we want at least 2 elements
-            line_name = actual_path[:2]  # line_name contains line path (composed by 2 elements: AB for ex.)
-            line = self.successive[line_name]  # the successive node is set
-            signal_information.update_path()  # the signal_inf. object update his path (method of sign_inf class)
-            signal_information = line.propagate(signal_information)  # call to this recursive method
+    def propagate(self, signal_information):  # node.propagate(signal_information) begin "propagate" for the node.
+        signal_information.update_path()    # recall the update of the path of signal_inf
+        if len(signal_information.path) != 0:  # condition to break the recursivity -> we want at least 2 elements
+            next_line = self.label + signal_information.path[0]
+            self.successive[next_line].propagate(signal_information)
         return signal_information
