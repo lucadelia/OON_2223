@@ -1,8 +1,17 @@
+from Lightpath import *
+
+N_channel = 10
+
+
 class Line:
     def __init__(self, in_dict):
         self._label = in_dict['label']
         self._length = in_dict['length']
         self._successive = {}
+        self._state = []  # Channel availability -> show if a connection is occupied. List of string (occup. channel)
+
+        for index in range(N_channel):  # It asked to implement 10 channels for each line
+            self._state.append("free")  # Initialization to "free"
 
     # GETTER -------------------------------------------------------------------------------------------------------
     @property
@@ -17,6 +26,10 @@ class Line:
     def successive(self):
         return self._successive
 
+    @property
+    def state(self):
+        return self._state
+
     # SETTER -------------------------------------------------------------------------------------------------------
     @label.setter
     def label(self, value):
@@ -30,6 +43,10 @@ class Line:
     def successive(self, value):
         self._successive = value
 
+    @state.setter
+    def state(self, value):
+        self._state = value
+
     # A line introduce some LATENCY and some NOISE, we need to add this error to the signal-----------------------------
     def latency_generation(self):
         c = 299792458
@@ -42,19 +59,17 @@ class Line:
 
     # Define a propagate method that update the signal information and call the successive element propagate method.
     def propagate(self, signal_information):
-        # LATENCY
-        latency = self.latency_generation()  # the latency is calculated inside the function. Nothing must be passed.
-        signal_information.update_latency(
-            latency)  # finally update the latency of signal, due to the parameters of the line (depends on the length).
-        # NOISE
-        signal_power = signal_information.signal_power  # we take the value of the power of the signal.
-        noise = self.noise_generation(signal_power)  # we pass this value to the function to add the noise of the line.
-        signal_information.update_noise_power(
-            noise)  # finally we update the value of the signal now considering the noise!
+        # Latency
+        latency = self.latency_generation()
+        signal_information.update_latency(latency)
 
-        line_node = self.successive[signal_information.path[0]]
-        # the first node of the path of the signal is stored thanks to the "successive" method
-        # so the first node of the line is defined.
-        signal_information = line_node.propagate(signal_information)  # Recursivity of the function "propagate",
-        # return the value passed
+        # Noise
+        signal_power = signal_information.signal_power  # we take the value of the power of the signal.
+        noise = self.noise_generation(signal_power)  # we pass this value to the function to add noise of the line.
+        signal_information.update_noise_power(noise)  # update the value of the signal considering the noise
+
+        # if object is in Lightpath -> I want to take it so... -> change its state in "occupied"
+        if isinstance(signal_information, Lightpath):
+            self.state[signal_information.channel] = "occupied"
+        signal_information = self.successive[signal_information.path[0]].propagate(signal_information)
         return signal_information
