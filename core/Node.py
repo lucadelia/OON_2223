@@ -39,7 +39,7 @@ class Node:
     def successive(self, value):
         self._successive = value
 
-    # Define a propagate method that update a signal_information object modifying its path -------------------------
+    # Define a propagate method that update a signal_information object modifying its path -----------------------------
     # attribute and call the successive one.
 
     def propagate(self, signal_information):  # node.propagate(signal_information) begin "propagate" for the node.
@@ -47,4 +47,11 @@ class Node:
         if len(signal_information.path) != 0:  # condition to break the recursivity -> we want at least 2 elements
             next_line = self.label + signal_information.path[0]
             self.successive[next_line].propagate(signal_information)
+        return signal_information
+
+    def propagate_probe(self, signal_information):
+        signal_information.update_path()
+        if len(signal_information.path) != 0:
+            next_line = self.label + signal_information.path[0]
+            self.successive[next_line].propagate_probe(signal_information)
         return signal_information

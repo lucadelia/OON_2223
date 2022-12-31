@@ -73,3 +73,17 @@ class Line:
             self.state[signal_information.channel] = "occupied"
         signal_information = self.successive[signal_information.path[0]].propagate(signal_information)
         return signal_information
+
+    def propagate_probe(self, signal_information):
+        # Latency
+        latency = self.latency_generation()
+        signal_information.update_latency(latency)
+
+        # Noise
+        signal_power = signal_information.signal_power
+        noise = self.noise_generation(signal_power)
+        signal_information.update_noise_power(noise)
+
+        line_node = self.successive[signal_information.path[0]]
+        signal_information = line_node.propagate_probe(signal_information)
+        return signal_information

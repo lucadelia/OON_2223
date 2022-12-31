@@ -11,7 +11,9 @@ class Network:
     def __init__(self):
         self._nodes = {}  # empty dict of nodes initialized
         self._lines = {}  # empty dict for lines
-        self._weighted_path = 0  # Is asked that weighted_path must be an attribute for this class
+        self._weighted_path = None  # Is asked that weighted_path must be an attribute for this class (Dataframe)
+        self._probe = None
+        self._route_space = None
 
         # FIRST: CONSTRUCTOR -> read the json (our network) and save all the parameters and give them to the classes----
 
@@ -35,7 +37,7 @@ class Network:
             # Now the LINE is described. The "Line" class accept a dictionary with label and position.
             # The label is the direction of connection of nodes like AB, BC, ... So I need to glue the actual node
             # (node_pointer) with the nodes "connected_nodes"
-            for node_connected in node_dict["connected_nodes"]:
+            for node_connected in node_dict['connected_nodes']:
                 line_label = actual_node + node_connected
 
                 # actual_node = A ; node_connected = B (where B is a possible node connected to A and the first of the
@@ -63,6 +65,14 @@ class Network:
     def weighted_path(self):
         return self._weighted_path
 
+    @property
+    def probe(self):
+        return self._probe
+
+    @property
+    def route_space(self):
+        return self._route_space
+
     @nodes.setter
     def nodes(self, value):
         self._nodes = value
@@ -75,6 +85,14 @@ class Network:
     def weighted_path(self, value):
         self._weighted_path = value
 
+    @probe.setter
+    def probe(self, value):
+        self._probe = value
+
+    @route_space.setter
+    def route_space(self, value):
+        self._route_space = value
+
     # THIRD: define the method "connect"--------------------------------------------------------------------------------
     def connect(self):
         for actual_node in self.nodes:
@@ -84,7 +102,7 @@ class Network:
                 self.lines[line_label].successive[node_connected] = self.nodes[node_connected]  # lines attached nodes
 
     #   the "connect" method must connect the element lines and node (node needs dict of lines and vice-versa), so the
-    #   "successive" method is called that update the line and the node.
+    #   "successive" method is called that update the line and the node (from the JSON).
 
     # FOURTH: find_path -> given two node labels, returning all path that connect them as a list of label.--------------
     # The path have to cross nodes at least once.
@@ -114,6 +132,11 @@ class Network:
         self.nodes[start_node].propagate(signal_information)
         return signal_information
 
+    def propagate_probe(self, signal_information):
+        start_node = signal_information.path[0]
+        self.nodes[start_node].propagate_probe(signal_information)
+        return signal_information
+
     # SIXTH: Draw -> draw the network with matplotlib-------------------------------------------------------------------
     def draw(self):
         plt.figure()  # create a new figure
@@ -134,13 +157,11 @@ class Network:
         plt.legend()
         plt.show()
 
-    # LAB 2: Creates PANDAS Dataframe that contains the path string with accumulated latency, noise and SNR.------------
-
+    # Creates PANDAS Dataframe that contains the path string with accumulated latency, noise and SNR.-------------------
     def weighted_paths_dataframe(self):
         data = {"path": [], "noise": [], "latency": [], "snr": []}  # SET -> collection unordered
         # Now I want to find all path and I had already described find_path that accept the star_node and the stop_node
         # so to find all the combination we give to this function all the nodes thanks to the for loop:
-        self.connect()
         for start_node in self.nodes:
             for stop_node in self.nodes:
                 # Two "for" to compute all the combinations of nodes
@@ -163,10 +184,57 @@ class Network:
                         snr = 10 * np.log10(signal_modified.signal_power / signal_modified.noise_power)
                         data["snr"].append(snr)
         self.weighted_path = pd.DataFrame(data)  # I have to pass to dataframe a dictionary "data" that contains list of
+        # pd.set_option('display.max_rows', None)   # With this I can see the complete Dataframe
         print(self.weighted_path)  # datas like path, noise, latency ecc....
 
+    # PROBE method to propagate the signal without the occupation of the channel
+    def probe_dataframe(self):
+        data = {"path": [], "noise": [], "latency": [], "snr": []}
+        for start_node in self.nodes:
+            for stop_node in self.nodes:
+                if start_node != stop_node:
+                    path_list = self.find_path(start_node, stop_node)
+                    for path in path_list:
+                        signal = SignalInformation(1e-3, list(path))
+                        signal_modified = self.propagate_probe(signal)
+                        path_arrows = ""
+                        for index_node in path:
+                            path_arrows += index_node + "->"
+                        path_arrows = path_arrows[:-2]
+                        data["path"].append(path_arrows)
+                        data["noise"].append(signal_modified.noise_power)
+                        data["latency"].append(signal_modified.latency)
+                        snr = 10 * np.log10(signal_modified.signal_power / signal_modified.noise_power)
+                        data["snr"].append(snr)
+        self.probe = pd.DataFrame(data)
+        # pd.set_option('display.max_rows', None)
+        print(self.probe)
+
+    # Creates PANDAS Dataframe that describe the availability for each channel -----------------------------------------
+    def route_space_dataframe(self):
+        database_dict = {"path": []}
+        for channel in range(N_channel):
+            database_dict["CH_"+str(channel)] = []
+
+        for start_node in self.nodes:
+            for stop_node in self.nodes:
+                if start_node != stop_node:
+                    path_list = self.find_path(start_node, stop_node)
+                    for path in path_list:
+                        path_arrows = ""
+                        for index_node in path:
+                            path_arrows += index_node + "->"
+                        path_arrows = path_arrows[:-2]      # Delete the last "->"
+
+                        database_dict['path'].append(path_arrows)
+                        for channel in range(N_channel):
+                            database_dict["CH_"+str(channel)].append(0)     # '0' means occupied
+        self.route_space = pd.DataFrame(database_dict)
+        # pd.set_option('display.max_rows', None)
+        print(self.route_space)
+
     # FIND BEST SNR: Given two nodes, find the path with the best SNR value---------------------------------------------
-    def find_best_snr(self, start_node, stop_node):
+    def find_best_snr(self, start_node, stop_node, channel):
         max_snr = min(self.weighted_path['snr'].values)  # with "values" I take the values of snr in the dataframe
         new_best_path = ""  # and with "min" I take the TOTAL min value of snr of dataframe
 
@@ -176,50 +244,73 @@ class Network:
             if row['path'][0] == start_node and row['path'][-1] == stop_node and row['snr'] > max_snr:
                 # I take the "path" column and with "row" I cycle the line.'0' and '-1' represent the first position and
                 # the last position of the path in the line indicated by "row" for ex. A->B->C I have [0]=A and [-1]=C
+                lightpath_available = True
                 path = list(row['path'].split('->'))    # "split" uses -> like a flag to create different strings
                                                         # example: A->B->C->D became ABCD
-                max_snr = self.weighted_path['snr'][i]
-                new_best_path = self.weighted_path['path'][i]
-        # print(new_best_path)
+                for j in range(len(path)-1):
+                    line_label = path[j] + path[j+1]
+                    if self.lines[line_label].state[channel] == "occupied":
+                        lightpath_available = False
+
+                if lightpath_available:
+                    max_snr = self.weighted_path['snr'][i]
+                    new_best_path = self.weighted_path['path'][i]
+        # print("Best SNR path: " + new_best_path)
         return new_best_path
 
     # FIND BEST LATENCY-------------------------------------------------------------------------------------------------
     # The comment for this section are the same from above
-    def find_best_latency(self, start_node, stop_node):
+    def find_best_latency(self, start_node, stop_node, channel):
         min_lat = max(self.weighted_path['latency'].values)
         new_best_path = ""
+
         # I save the max latency of the dataframe, and then I cycle all the latencies for all path to find the min one.
         for i, row in self.weighted_path.iterrows():
             if row['path'][0] == start_node and row['path'][-1] == stop_node and row['latency'] < min_lat:
+                lightpath_available = True
                 path = list(row['path'].split('->'))
-                min_lat = self.weighted_path['latency'][i]
-                new_best_path = self.weighted_path['path'][i]
-        # print(new_best_path)
+
+                for j in range(len(path)-1):
+                    line_label = path[j] + path[j+1]
+                    if self.lines[line_label].state[channel] == "occupied":
+                        lightpath_available = False
+
+                if lightpath_available:     # Simplified version, same as: "if lightpath_available == True"
+                    min_lat = self.weighted_path['latency'][i]
+                    new_best_path = self.weighted_path['path'][i]
+        # print("Best latency path: " + new_best_path)
         return new_best_path
 
     # STREAM METHOD -> for each element of a given list of instances of the class connection, sets lat and snr.---------
     # This will be calculated by propagating a SignalInformation object
+    # connection_list is a list of instances (=object) of class Connection
     def stream(self, connection_list, signal_power, key="latency"):  # latency set to default
-        # connection_list is a list of instances (=object) of class Connection
         for connection in connection_list:  # with "connection" I cycle all the instances...
             path = ""
+            channel = -1
             if key == "latency":  # ...if the name latency is passed...
-                while path == "":
-                    path = self.find_best_latency(connection.input, connection.output)  # ...the latency is taken using
-            elif key == "snr":                                                          # the attributes of the class.
-                while path == "":
-                    path = self.find_best_snr(connection.input, connection.output)
+                while path == "" and channel <= N_channel-2:
+                    channel += 1
+                    path = self.find_best_latency(connection.input, connection.output, channel)
+                    # ...the latency is taken using the attributes of the class.
+            elif key == "snr":
+                while path == "" and channel <= N_channel-2:
+                    channel += 1
+                    path = self.find_best_snr(connection.input, connection.output, channel)
 
             if path == "":
                 connection.latency = 0
                 connection.snr = 0
             else:
+                path_arrows = path
                 path = path.split("->")
-                signal = SignalInformation(signal_power, list(path))
-                final_signal = self.propagate(signal)
+                signal_lightpath = Lightpath(signal_power, list(path), channel)
+                final_signal = self.propagate(signal_lightpath)
+
+                # Update of route_space
+                self._route_space.loc[self._route_space.path == path_arrows, 'CH_'+str(channel)] = 1
+                # With 'loc' I decide to show only the column "path", then set the channel that is crossed available '1'
 
                 connection.signal_power = final_signal.signal_power
                 connection.latency = final_signal.latency
-                connection.snr = 10 * np.log10(final_signal.signal_power / final_signal.latency)
-
-
+                connection.snr = 10 * np.log10(final_signal.signal_power / final_signal.noise_power)
