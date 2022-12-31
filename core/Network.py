@@ -96,10 +96,23 @@ class Network:
     # THIRD: define the method "connect"--------------------------------------------------------------------------------
     def connect(self):
         for actual_node in self.nodes:
+            self.nodes[actual_node].switching_matrix = {}   # empty dict for each node
             for node_connected in self.nodes[actual_node].connected_nodes:
                 line_label = actual_node + node_connected
                 self.nodes[actual_node].successive[line_label] = self.lines[line_label]  # nodes attached line
                 self.lines[line_label].successive[node_connected] = self.nodes[node_connected]  # lines attached nodes
+
+                switching_matrix_dict = {}
+                # Initialization of the Switching Matrix
+                for out_node_conn in self.nodes[actual_node].connected_nodes:
+                    if node_connected == out_node_conn:
+                        # array filled with zeros of type int
+                        switching_matrix_dict[out_node_conn] = np.zeros(N_channel).astype(int)
+                    else:
+                        # array filled with ones of type int
+                        switching_matrix_dict[out_node_conn] = np.ones(N_channel).astype(int)
+                # fill the dict inside the dict (the connected nodes)
+                self.nodes[actual_node].switching_matrix[node_connected] = switching_matrix_dict
 
     #   the "connect" method must connect the element lines and node (node needs dict of lines and vice-versa), so the
     #   "successive" method is called that update the line and the node (from the JSON).
@@ -249,7 +262,7 @@ class Network:
                                                         # example: A->B->C->D became ABCD
                 for j in range(len(path)-1):
                     line_label = path[j] + path[j+1]
-                    if self.lines[line_label].state[channel] == "occupied":
+                    if self.lines[line_label].state[channel] == 0:
                         lightpath_available = False
 
                 if lightpath_available:
@@ -272,7 +285,7 @@ class Network:
 
                 for j in range(len(path)-1):
                     line_label = path[j] + path[j+1]
-                    if self.lines[line_label].state[channel] == "occupied":
+                    if self.lines[line_label].state[channel] == 0:
                         lightpath_available = False
 
                 if lightpath_available:     # Simplified version, same as: "if lightpath_available == True"

@@ -4,6 +4,7 @@ class Node:
         self._position = in_dict['position']
         self._connected_nodes = in_dict['connected_nodes']
         self._successive = {}  # initialized dictionary to zero (empty)
+        self._switching_matrix = None
 
     # GETTER -------------------------------------------------------------------------------------------------------
     @property
@@ -22,6 +23,10 @@ class Node:
     def successive(self):
         return self._successive
 
+    @property
+    def switching_matrix(self):
+        return self._switching_matrix
+
     # SETTER -------------------------------------------------------------------------------------------------------
     @label.setter
     def label(self, value):
@@ -38,6 +43,10 @@ class Node:
     @successive.setter
     def successive(self, value):
         self._successive = value
+
+    @switching_matrix.setter
+    def switching_matrix(self, value):
+        self._switching_matrix = value
 
     # Define a propagate method that update a signal_information object modifying its path -----------------------------
     # attribute and call the successive one.

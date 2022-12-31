@@ -1,5 +1,5 @@
+import numpy as np
 from Lightpath import *
-
 N_channel = 10
 
 
@@ -10,8 +10,8 @@ class Line:
         self._successive = {}
         self._state = []  # Channel availability -> show if a connection is occupied. List of string (occup. channel)
 
-        for index in range(N_channel):  # It asked to implement 10 channels for each line
-            self._state.append("free")  # Initialization to "free"
+        # Initialization of the line as FREE (so not occupied)
+        self._state = np.ones(N_channel).astype(int)    # Change the availability in integers and use array
 
     # GETTER -------------------------------------------------------------------------------------------------------
     @property
@@ -70,7 +70,7 @@ class Line:
 
         # if object is in Lightpath -> I want to take it so... -> change its state in "occupied"
         if isinstance(signal_information, Lightpath):
-            self.state[signal_information.channel] = "occupied"
+            self.state[signal_information.channel] = 0
         signal_information = self.successive[signal_information.path[0]].propagate(signal_information)
         return signal_information
 
