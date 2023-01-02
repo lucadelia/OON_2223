@@ -225,9 +225,9 @@ class Network:
 
     # Creates PANDAS Dataframe that describe the availability for each channel -----------------------------------------
     def route_space_dataframe(self):
-        database_dict = {"path": []}
+        database_dict = {"path": []}    # path list
         for channel in range(N_channel):
-            database_dict["CH_"+str(channel)] = []
+            database_dict["CH_"+str(channel)] = []  # list of channel availability for all channel
 
         for start_node in self.nodes:
             for stop_node in self.nodes:
@@ -243,6 +243,29 @@ class Network:
                         for channel in range(N_channel):
                             database_dict["CH_"+str(channel)].append(0)     # '0' means occupied
         self.route_space = pd.DataFrame(database_dict)
+        # pd.set_option('display.max_rows', None)
+        print(self.route_space)
+
+    # ROUTE SPACE ------------------------------------------------------------------------------------------------------
+    def route_space_update(self):
+        index_range = self.route_space.index    # Save the indexes of the route space dataframe (349 paths)
+        for i in index_range:
+            tmp = np.ones(N_channel).astype(int)
+            node_list = self.route_space['path'][i].split("->")
+
+            for j in range(len(node_list)-1):   # exclude last node
+                line_label = node_list[j] + node_list[j+1]
+                tmp *= self.lines[line_label].state     # Verifies the availability of the line and do the product tmp
+
+                if j != 0:  # exclude first node because input
+                    tmp *= self.nodes[node_list[j]].switching_matrix[node_list[j-1]][node_list[j+1]]
+                    # (How defined in the connect method, the state is initialized to 1, otherwise is 0)
+                    # Switching matrix represent the availability to connect the nodes while the state is the
+                    # availability of the channel. First the product with the state, and then with the matrix.
+                    # Modify the "state" to occupy the path
+
+            for z in range(N_channel):
+                self.route_space.loc[i, 'CH_'+str(z)] = tmp[z]
         # pd.set_option('display.max_rows', None)
         print(self.route_space)
 
