@@ -8,26 +8,27 @@ from Signal_information import *
 
 
 class Network:
-    def __init__(self):
+    def __init__(self, json_file):
         self._nodes = {}  # empty dict of nodes initialized
         self._lines = {}  # empty dict for lines
         self._weighted_path = None  # Is asked that weighted_path must be an attribute for this class (Dataframe)
         self._probe = None
         self._route_space = None
+        self._data_dict = None      # Take the data from the json file
 
         # FIRST: CONSTRUCTOR -> read the json (our network) and save all the parameters and give them to the classes----
 
-        with open("nodes.json", 'r') as read:  # the file that is passed to this class is read...
-            data_dict = json.load(read)  # ...and save the variable in a dictionary
+        with open(json_file, 'r') as read:  # the file that is passed to this class is read...
+            self.data_dict = json.load(read)  # ...and save the variable in a dictionary (must specify the path)
 
         # Now dictionary for Node and Line must be set
         node_dict = {}
         line_dict = {}
 
-        for actual_node in data_dict:
+        for actual_node in self.data_dict:
             node_dict['label'] = actual_node  # the json file have (first of all) the label of all nodes, so I save this
-            node_dict['connected_nodes'] = data_dict[actual_node]['connected_nodes']
-            node_dict['position'] = data_dict[actual_node]['position']  # In the json there are this keywords
+            node_dict['connected_nodes'] = self.data_dict[actual_node]['connected_nodes']
+            node_dict['position'] = self.data_dict[actual_node]['position']  # In the json there are this keywords
             self._nodes[actual_node] = Node(node_dict)
             # The json is scanned. The name of the Nodes, nodes that are connected and their position are saved.
             # This information is saved in the node_dict{} dictionary. So, when the object of the class Network
@@ -44,8 +45,8 @@ class Network:
                 # "connected_nodes" list) -> the name of the line is AB
 
                 # The class line accept also a position value (his length)
-                position_1 = np.array(data_dict[actual_node]['position'])  # explicit with data_dict for same indent
-                position_2 = np.array(data_dict[node_connected]['position'])
+                position_1 = np.array(self.data_dict[actual_node]['position'])  # explicit with data_dict for same indent
+                position_2 = np.array(self.data_dict[node_connected]['position'])
                 line_length = np.linalg.norm(position_1 - position_2)  # numpy method that calculate the distance
 
                 line_dict["label"] = line_label  # the line XY is saved in the line dictionary
@@ -64,6 +65,10 @@ class Network:
     @property
     def weighted_path(self):
         return self._weighted_path
+
+    @property
+    def data_dict(self):
+        return self._data_dict
 
     @property
     def probe(self):
@@ -85,6 +90,10 @@ class Network:
     def weighted_path(self, value):
         self._weighted_path = value
 
+    @data_dict.setter
+    def data_dict(self, value):
+        self._data_dict = value
+
     @probe.setter
     def probe(self, value):
         self._probe = value
@@ -101,9 +110,10 @@ class Network:
                 line_label = actual_node + node_connected
                 self.nodes[actual_node].successive[line_label] = self.lines[line_label]  # nodes attached line
                 self.lines[line_label].successive[node_connected] = self.nodes[node_connected]  # lines attached nodes
+                self.nodes[actual_node].switching_matrix[node_connected] = self.data_dict[actual_node]['switching_matrix'][node_connected]
 
+                ''' # Initialization of the Switching Matrix -> LAB 6
                 switching_matrix_dict = {}
-                # Initialization of the Switching Matrix
                 for out_node_conn in self.nodes[actual_node].connected_nodes:
                     if node_connected == out_node_conn:
                         # array filled with zeros of type int
@@ -113,6 +123,7 @@ class Network:
                         switching_matrix_dict[out_node_conn] = np.ones(N_channel).astype(int)
                 # fill the dict inside the dict (the connected nodes)
                 self.nodes[actual_node].switching_matrix[node_connected] = switching_matrix_dict
+                '''
 
     #   the "connect" method must connect the element lines and node (node needs dict of lines and vice-versa), so the
     #   "successive" method is called that update the line and the node (from the JSON).
@@ -350,3 +361,4 @@ class Network:
                 connection.signal_power = final_signal.signal_power
                 connection.latency = final_signal.latency
                 connection.snr = 10 * np.log10(final_signal.signal_power / final_signal.noise_power)
+
