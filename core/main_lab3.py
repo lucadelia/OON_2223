@@ -1,57 +1,50 @@
 from Network import *
-from Connection import *
-import matplotlib.pyplot as plt
-import random  # useful to generate random combination of nodes
+from Signal_information import *
 
-Net3 = Network()
-Net3.connect()  # recall connect to create the Network
-# Net3.draw()     # draw the Network
-Net3.weighted_paths_dataframe()  # recall weighted_paths to calculate the latency and snr of paths
-Net3.route_space_dataframe()
+Net1 = Network()
 
-node_list = list(Net3.nodes.keys())  # the elements of dictionary "nodes" are taken and insert in a list "node_list"
-connection_obj_list = []  # list of instances of class connection
-given_data = {}  # data given to the class connection -> dictionary
-signal_power = 1  # signal_power equal to 1mW
+data = {"path": [], "noise": [], "latency": [], "SNR": []}  # SET -> collection unordered
+# Now I want to find all path and I had already described find_path that accept the star_node and the stop_node
+# so to find all the combination we give to this function all the nodes thanks to the for loop:
+Net1.connect()
+for start_node in Net1.nodes:
+    for stop_node in Net1.nodes:
+        # Two "for" to compute all the combinations of nodes
+        if start_node != stop_node:
+            path_list = Net1.find_path(start_node, stop_node)
+            for path in path_list:
+                signal = SignalInformation(1e-3, list(path))  # OBJECT signal created with power and path
+                signal_modified = Net1.propagate(signal)  # The method "propagate" are called: propagate(class
+                # network) -> propagate (class Node) -> propagate (class Line). The command "list" transform the
+                # path in a list.
+                path_arrows = " "
+                for index_node in path:
+                    path_arrows += index_node + "->"
+                    # then "path_arrows" must be reset for the next index, useful only for representation
+                path_arrows = path_arrows[:-2]  # remove the last two indexes
+                # Now the database must be created:
+                data["path"].append(path_arrows)
+                data["noise"].append(signal_modified.noise_power)
+                data["latency"].append(signal_modified.latency)
+                snr = 10 * np.log10(signal_modified.signal_power / signal_modified.noise_power)
+                data["SNR"].append(snr)
+                Net1.weighted_path = pd.DataFrame(data)
+# print(Net1.weighted_path)
 
+# Here follow some test that I made during the project: (Not requested)
 
-# Now I have to create 100 connections, and then I can use the method "stream" to find latency and snr------------------
-for i in range(100):
-    io_nodes = random.sample(node_list, 2)  # It means -> from node_list rake two random values
-    given_data["input"] = io_nodes[0]  # define the attributes of connection object...
-    given_data["output"] = io_nodes[1]
-    given_data["signal_power"] = signal_power
+# EXAMPLE OF MAIN -> Write all the possible path:
+object_Net0 = Network()
+tmp = object_Net0.find_path("A", "D")
+print(tmp)
 
-    objConnection = Connection(given_data)  # ...and now create the object with that attributes
-    connection_obj_list.append(objConnection)  # Now the list of instances for 100 connection is created!
+# EXAMPLE OF MAIN -> Show the plot of the Network in exam
+object_Net1 = Network()
+tmp = object_Net1.draw()
 
-# Now I use the "stream" method to calculate the best latency and snr for all the 100 ----------------------------------
-Net3.stream(connection_obj_list, signal_power, key="latency")
-latency_list = []
-for conn in connection_obj_list:
-    latency_list.append(conn.latency)
+# EXAMPLE OF MAIN -> Return the  best SNR and the LATENCY
+object_Net2 = Network()
+object_Net2.weighted_paths_dataframe()
+print(object_Net2.find_best_snr('A', 'B'))
+print(object_Net2.find_best_latency('A', 'B'))
 
-# I recall the method stream now for the SNR (100 instances)------------------------------------------------------------
-Net3.stream(connection_obj_list, signal_power, key="snr")
-snr_list = []
-for conn in connection_obj_list:
-    if conn.snr != 0:
-        snr_list.append(conn.snr)
-
-# Draw the histograms---------------------------------------------------------------------------------------------------
-
-# How many paths are deployed and with what latency
-plt.figure()
-plt.hist(latency_list, color='b')
-plt.xlabel("Latency [s]")
-plt.ylabel("Number of times")
-plt.title("Distribution of the latency")
-
-# How many paths are deployed and with what SNR
-plt.figure()
-plt.hist(snr_list, color='r')
-plt.xlabel("snr [dB]")
-plt.ylabel("Number of times")
-plt.title("Distribution of the Signal_to_Noise Ratio (SNR)")
-
-plt.show()
