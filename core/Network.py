@@ -232,7 +232,7 @@ class Network:
                         data["snr"].append(snr)
         self.probe = pd.DataFrame(data)
         # pd.set_option('display.max_rows', None)
-        print(self.probe)
+        # print(self.probe)
 
     # Creates PANDAS Dataframe that describe the availability for each channel -----------------------------------------
     def route_space_dataframe(self):
@@ -255,7 +255,7 @@ class Network:
                             database_dict["CH_"+str(channel)].append(0)     # '0' means occupied
         self.route_space = pd.DataFrame(database_dict)
         # pd.set_option('display.max_rows', None)
-        print(self.route_space)
+        # print(self.route_space)
 
     # ROUTE SPACE ------------------------------------------------------------------------------------------------------
     def route_space_update(self):
@@ -278,7 +278,7 @@ class Network:
             for z in range(N_channel):
                 self.route_space.loc[i, 'CH_'+str(z)] = tmp[z]
         # pd.set_option('display.max_rows', None)
-        print(self.route_space)
+        # print(self.route_space)
 
     # FIND BEST SNR: Given two nodes, find the path with the best SNR value---------------------------------------------
     def find_best_snr(self, start_node, stop_node, channel):
@@ -349,16 +349,18 @@ class Network:
                 connection.latency = 0
                 connection.snr = 0
             else:
-                path_arrows = path
+                # path_arrows = path
                 path = path.split("->")
                 signal_lightpath = Lightpath(signal_power, list(path), channel)
                 final_signal = self.propagate(signal_lightpath)
 
                 # Update of route_space
-                self._route_space.loc[self._route_space.path == path_arrows, 'CH_'+str(channel)] = 1
+                # self._route_space.loc[self._route_space.path == path_arrows, 'CH_'+str(channel)] = 1
                 # With 'loc' I decide to show only the column "path", then set the channel that is crossed available '1'
 
                 connection.signal_power = final_signal.signal_power
                 connection.latency = final_signal.latency
                 connection.snr = 10 * np.log10(final_signal.signal_power / final_signal.noise_power)
+                self.route_space_update()
+
 
