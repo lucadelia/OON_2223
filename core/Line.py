@@ -71,7 +71,7 @@ class Line:
         # if object is in Lightpath -> I want to take it so... -> change its state in "occupied"
         if isinstance(signal_information, Lightpath):
             self.state[signal_information.channel] = 0
-        signal_information = self.successive[signal_information.path[0]].propagate(signal_information)
+        signal_information = self.successive[signal_information.path[0]].propagate(signal_information, self.label[0])
         return signal_information
 
     def propagate_probe(self, signal_information):

@@ -3,7 +3,7 @@ from Connection import *
 import matplotlib.pyplot as plt
 import random  # useful to generate random combination of nodes
 
-Net4 = Network("../resources/nodes_not_full.json")  # first read the matrix FULL
+Net4 = Network("../resources/nodes_full.json")  # first read the matrix FULL
 Net4.connect()  # recall connect to create the Network
 # Net4.draw()     # draw the Network
 Net4.weighted_paths_dataframe()  # recall weighted_paths to calculate the latency and snr of paths
@@ -55,6 +55,6 @@ plt.hist(snr_list, color='r')
 plt.xlabel("snr [dB]")
 plt.ylabel("Number of times")
 plt.title("Distribution of the Signal_to_Noise Ratio (SNR)")
-plt.savefig('../results/Nodes_not_full_json_SNR_distribution_')
+plt.savefig('../results/Nodes_full_json_SNR_distribution_')
 
 plt.show()

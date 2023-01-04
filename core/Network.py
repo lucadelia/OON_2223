@@ -153,7 +153,7 @@ class Network:
     # FIFTH: propagate -> propagate the signal_information through the path specified and modified the information------
     def propagate(self, signal_information):
         start_node = signal_information.path[0]
-        self.nodes[start_node].propagate(signal_information)
+        self.nodes[start_node].propagate(signal_information, None)
         return signal_information
 
     def propagate_probe(self, signal_information):
@@ -362,5 +362,10 @@ class Network:
                 connection.latency = final_signal.latency
                 connection.snr = 10 * np.log10(final_signal.signal_power / final_signal.noise_power)
                 self.route_space_update()
+
+        # Initial switching matrix restored after the streaming
+        for actual_node in self.nodes:
+            for node_connected in self.nodes[actual_node].connected_nodes:
+                self.nodes[actual_node].switching_matrix[node_connected] = self.data_dict[actual_node]['switching_matrix'][node_connected]
 
 
