@@ -5,6 +5,12 @@ import pandas as pd
 from Node import *  # All methods and attributes are included here, methods will be used
 from Line import *  # same thing for Line class
 from Signal_information import *
+from scipy import special
+# Numpy function, is a library that contain the function "erfcinv" -> inverse of the complementary error function
+
+BERt = 1e-3     # Bit error rate (BER)
+Rs = 32e9       # Symbol rate [baud/s]
+Bn = 12.5e9     # Noise bandwidth [Hz]
 
 
 class Network:
@@ -29,6 +35,11 @@ class Network:
             node_dict['label'] = actual_node  # the json file have (first of all) the label of all nodes, so I save this
             node_dict['connected_nodes'] = self.data_dict[actual_node]['connected_nodes']
             node_dict['position'] = self.data_dict[actual_node]['position']  # In the json there are this keywords
+            if 'transceiver' in self.data_dict[actual_node].keys():     # If "transceiver" is inside the data_dict...
+                node_dict['transceiver'] = self.data_dict[actual_node]['transceiver']
+            else:
+                node_dict['transceiver'] = 'fixed_rate'     # Set to fixed_rate if not specified in the json
+
             self._nodes[actual_node] = Node(node_dict)
             # The json is scanned. The name of the Nodes, nodes that are connected and their position are saved.
             # This information is saved in the node_dict{} dictionary. So, when the object of the class Network
@@ -209,7 +220,7 @@ class Network:
                         data["snr"].append(snr)
         self.weighted_path = pd.DataFrame(data)  # I have to pass to dataframe a dictionary "data" that contains list of
         # pd.set_option('display.max_rows', None)   # With this I can see the complete Dataframe
-        print(self.weighted_path)  # datas like path, noise, latency ecc....
+        # print(self.weighted_path)  # datas like path, noise, latency ecc....
 
     # PROBE method to propagate the signal without the occupation of the channel
     def probe_dataframe(self):
@@ -328,6 +339,42 @@ class Network:
         # print("Best latency path: " + new_best_path)
         return new_best_path
 
+    # Evaluate Rb -> Bit Rate observing the value of GSNR---------------------------------------------------------------
+    def calculate_bit_rate(self, path, strategy):
+
+        if path == "":  # empty path verified
+            return 0
+
+        gsnr_dB = float(self.weighted_path.loc[self.weighted_path['path'] == path, 'snr'].values)       # Is in decibel!
+        gsnr = 10**(gsnr_dB/10)     # Converted in LINEAR to perform the operations
+        # the path is verified and take the values of snr and put it on the variable gsnr
+
+        # CONDITIONS:
+        if strategy == 'fixed_rate':
+            if gsnr >= 2*(special.erfinv(2*BERt)**2)*Rs/Bn:
+                bit_rate = 100e9    # 100 Gbps
+            else:
+                bit_rate = 0
+
+        elif strategy == 'flex_rate':
+            if gsnr < 2*(special.erfinv(2*BERt)**2)*Rs/Bn:
+                bit_rate = 0
+            elif 2*(special.erfinv(2 * BERt) ** 2)*Rs/Bn <= gsnr < 14/3*(special.erfinv(3 / 2 * BERt) ** 2)*Rs/Bn:
+                bit_rate = 100e9
+            elif 14/3*(special.erfinv(3 / 2 * BERt) ** 2)*Rs/Bn <= gsnr < 10*(special.erfinv(8 / 3 * BERt) ** 2)*Rs/Bn:
+                bit_rate = 200e9
+            elif gsnr >= 10*(special.erfinv(8 / 3 * BERt) ** 2)*Rs/Bn:
+                bit_rate = 400e9
+            else:
+                bit_rate = 0
+        elif strategy == 'shannon':
+            bit_rate = 2 * Rs * np.log(1+gsnr*Rs/Bn)
+        # If no strategy is chosen...
+        else:
+            bit_rate = None
+
+        return bit_rate     # Return BER
+
     # STREAM METHOD -> for each element of a given list of instances of the class connection, sets lat and snr.---------
     # This will be calculated by propagating a SignalInformation object
     # connection_list is a list of instances (=object) of class Connection
@@ -335,17 +382,23 @@ class Network:
         for connection in connection_list:  # with "connection" I cycle all the instances...
             path = ""
             channel = -1
+            bit_rate = 0
+
             if key == "latency":  # ...if the name latency is passed...
-                while path == "" and channel <= N_channel-2:
+                while (path == "" or bit_rate == 0) and channel <= N_channel-2:     # Have to be an "OR" in the cond.
+                    # If all these conditions are satisfied is possible to take the path
                     channel += 1
-                    path = self.find_best_latency(connection.input, connection.output, channel)
                     # ...the latency is taken using the attributes of the class.
+                    path = self.find_best_latency(connection.input, connection.output, channel)         # BEST_LATENCY
+                    bit_rate = self.calculate_bit_rate(path, self.nodes[connection.input].transceiver)  # BIT_RATE
+
             elif key == "snr":
-                while path == "" and channel <= N_channel-2:
+                while (path == "" or bit_rate == 0) and channel <= N_channel-2:
                     channel += 1
                     path = self.find_best_snr(connection.input, connection.output, channel)
+                    bit_rate = self.calculate_bit_rate(path, self.nodes[connection.input].transceiver)
 
-            if path == "":
+            if path == "" or bit_rate == 0:     # If path not reach min GSNR (ber = 0)the connection will be rejected!
                 connection.latency = 0
                 connection.snr = 0
             else:
@@ -361,6 +414,7 @@ class Network:
                 connection.signal_power = final_signal.signal_power
                 connection.latency = final_signal.latency
                 connection.snr = 10 * np.log10(final_signal.signal_power / final_signal.noise_power)
+                connection.bit_rate = bit_rate
                 self.route_space_update()
 
         # Initial switching matrix restored after the streaming
@@ -368,4 +422,6 @@ class Network:
             for node_connected in self.nodes[actual_node].connected_nodes:
                 self.nodes[actual_node].switching_matrix[node_connected] = self.data_dict[actual_node]['switching_matrix'][node_connected]
 
-
+        # Is also necessary to restore the state of the line otherwise they remains always occupied
+        for line_index in self.lines:
+            self.lines[line_index].state = np.ones(N_channel).astype(int)
