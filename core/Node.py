@@ -8,6 +8,7 @@ class Node:
         self._connected_nodes = in_dict['connected_nodes']
         self._successive = {}  # initialized dictionary to zero (empty)
         self._switching_matrix = None
+        self._transceiver = in_dict['transceiver']
 
     # GETTER -------------------------------------------------------------------------------------------------------
     @property
@@ -30,6 +31,10 @@ class Node:
     def switching_matrix(self):
         return self._switching_matrix
 
+    @property
+    def transceiver(self):
+        return self._transceiver
+
     # SETTER -------------------------------------------------------------------------------------------------------
     @label.setter
     def label(self, value):
@@ -51,6 +56,10 @@ class Node:
     def switching_matrix(self, value):
         self._switching_matrix = value
 
+    @transceiver.setter
+    def transceiver(self, value):
+        self._transceiver = value
+
     # Define a propagate method that update a signal_information object modifying its path -----------------------------
     # attribute and call the successive one.
 
@@ -63,6 +72,7 @@ class Node:
                 self.switching_matrix[prev_node][signal_information.path[0]][signal_information.channel] = 0
                 # then the channel is updated, so I have to block the previous and the next channels
                 # a verification is seen for the first and last channel that obv don't have prev and next channels.
+                # Unless they are...
                 if signal_information.channel != 0:
                     self.switching_matrix[prev_node][signal_information.path[0]][signal_information.channel-1] = 0
                 if signal_information.channel != N_channel-1:
