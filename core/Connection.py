@@ -5,6 +5,7 @@ class Connection:
         self._signal_power = given_data['signal_power']   # same but float -> signal_power
         self._latency = 0   # float
         self._snr = None    # float
+        self._bit_rate = 0
 
     @property
     def input(self):
@@ -26,6 +27,10 @@ class Connection:
     def snr(self):
         return self._snr
 
+    @property
+    def bit_rate(self):
+        return self._bit_rate
+
     # -------------------------------------------------------
 
     @signal_power.setter
@@ -39,3 +44,7 @@ class Connection:
     @snr.setter
     def snr(self, value):
         self._snr = value
+
+    @bit_rate.setter
+    def bit_rate(self, value):
+        self._bit_rate = value
