@@ -1,16 +1,10 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import json
 import pandas as pd
 from Node import *  # All methods and attributes are included here, methods will be used
 from Line import *  # same thing for Line class
 from Signal_information import *
-from scipy import special
-# Numpy function, is a library that contain the function "erfcinv" -> inverse of the complementary error function
-
-BERt = 1e-3     # Bit error rate (BER)
-Rs = 32e9       # Symbol rate [baud/s]
-Bn = 12.5e9     # Noise bandwidth [Hz]
+from Constant_definition import *
 
 
 class Network:
@@ -60,8 +54,14 @@ class Network:
                 position_2 = np.array(self.data_dict[node_connected]['position'])
                 line_length = np.linalg.norm(position_1 - position_2)  # numpy method that calculate the distance
 
-                line_dict["label"] = line_label  # the line XY is saved in the line dictionary
-                line_dict["length"] = line_length  # same for the length
+                line_dict["label"] = line_label         # the line XY is saved in the line dictionary
+                line_dict["length"] = line_length       # same for the length
+                line_dict["amp_gain"] = amp_gain        # set the value gain of the amplifier
+                line_dict["amp_nf"] = amp_nf            # set the value noise figures of the amplifier
+                line_dict["alpha"] = alpha              # set the value alpha [dB]
+                line_dict["beta2"] = beta2              # set the value beta
+                line_dict["gamma"] = gamma              # set the value gamma
+
                 self._lines[line_label] = Line(line_dict)  # I give the dictionary to the "Line" class defined by label
 
     # SECOND: Setter and Getter-----------------------------------------------------------------------------------------
