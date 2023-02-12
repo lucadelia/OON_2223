@@ -79,9 +79,12 @@ class Node:
                     self.switching_matrix[prev_node][signal_information.path[0]][signal_information.channel+1] = 0
 
             next_line = self.label + signal_information.path[0]
+            signal_information.signal_power = self.successive[next_line].optimized_launch_power()
+            # "optimized_launch_power()" set the optimal launch power for each line
             self.successive[next_line].propagate(signal_information)
         return signal_information
 
+    # ------------------------------------------------------------------------------------------------------------------
     def propagate_probe(self, signal_information):
         signal_information.update_path()
         if len(signal_information.path) != 0:
