@@ -89,6 +89,8 @@ class Network:
     def route_space(self):
         return self._route_space
 
+    # SETTER -----------------------------------------------------------------------------------------------------------
+
     @nodes.setter
     def nodes(self, value):
         self._nodes = value
@@ -222,7 +224,7 @@ class Network:
         # pd.set_option('display.max_rows', None)   # With this I can see the complete Dataframe
         # print(self.weighted_path)  # datas like path, noise, latency ecc....
 
-    # PROBE method to propagate the signal without the occupation of the channel
+    # PROBE method to propagate the signal without the occupation of the channel ---------------------------------------
     def probe_dataframe(self):
         data = {"path": [], "noise": [], "latency": [], "snr": []}
         for start_node in self.nodes:
@@ -340,35 +342,42 @@ class Network:
         return new_best_path
 
     # Evaluate Rb -> Bit Rate observing the value of GSNR---------------------------------------------------------------
-    def calculate_bit_rate(self, path, strategy):
+    def calculate_bit_rate(self, lightpath, strategy):
 
+        path = "".join(lightpath.path)      # Lightpath "path" is a list, with join I can obtain a string with no space
+        path_arrows = ""
+        for index in path:
+            path_arrows += index + "->"
+        path_arrows = path_arrows[:-2]
+
+        RS = lightpath.rs
         if path == "":  # empty path verified
             return 0
 
-        gsnr_dB = float(self.weighted_path.loc[self.weighted_path['path'] == path, 'snr'].values)       # Is in decibel!
+        gsnr_dB = float(self.weighted_path.loc[self.weighted_path['path'] == path_arrows, 'snr'].values)       # Is in decibel!
         gsnr = 10**(gsnr_dB/10)     # Converted in LINEAR to perform the operations
         # the path is verified and take the values of snr and put it on the variable gsnr
 
         # CONDITIONS:
         if strategy == 'fixed_rate':
-            if gsnr >= 2*(special.erfinv(2*BERt)**2)*Rs/Bn:
+            if gsnr >= 2*(special.erfinv(2*BERt)**2)*RS/bn:
                 bit_rate = 100e9    # 100 Gbps
             else:
                 bit_rate = 0
 
         elif strategy == 'flex_rate':
-            if gsnr < 2*(special.erfinv(2*BERt)**2)*Rs/Bn:
+            if gsnr < 2*(special.erfinv(2*BERt)**2)*RS/bn:
                 bit_rate = 0
-            elif 2*(special.erfinv(2 * BERt) ** 2)*Rs/Bn <= gsnr < 14/3*(special.erfinv(3 / 2 * BERt) ** 2)*Rs/Bn:
+            elif 2*(special.erfinv(2 * BERt) ** 2)*RS/bn <= gsnr < 14/3*(special.erfinv(3 / 2 * BERt) ** 2)*RS/bn:
                 bit_rate = 100e9
-            elif 14/3*(special.erfinv(3 / 2 * BERt) ** 2)*Rs/Bn <= gsnr < 10*(special.erfinv(8 / 3 * BERt) ** 2)*Rs/Bn:
+            elif 14/3*(special.erfinv(3 / 2 * BERt) ** 2)*RS/bn <= gsnr < 10*(special.erfinv(8 / 3 * BERt) ** 2)*RS/bn:
                 bit_rate = 200e9
-            elif gsnr >= 10*(special.erfinv(8 / 3 * BERt) ** 2)*Rs/Bn:
+            elif gsnr >= 10*(special.erfinv(8 / 3 * BERt) ** 2)*RS/bn:
                 bit_rate = 400e9
             else:
                 bit_rate = 0
         elif strategy == 'shannon':
-            bit_rate = 2 * Rs * np.log(1+gsnr*Rs/Bn)
+            bit_rate = 2 * RS * np.log(1+gsnr*RS/bn)
         # If no strategy is chosen...
         else:
             bit_rate = None
@@ -390,22 +399,25 @@ class Network:
                     channel += 1
                     # ...the latency is taken using the attributes of the class.
                     path = self.find_best_latency(connection.input, connection.output, channel)         # BEST_LATENCY
-                    bit_rate = self.calculate_bit_rate(path, self.nodes[connection.input].transceiver)  # BIT_RATE
+                    path = path.split("->")
+                    lightpath = Lightpath(signal_power, list(path), channel)
+                    bit_rate = self.calculate_bit_rate(lightpath, self.nodes[connection.input].transceiver)  # BIT_RATE
 
             elif key == "snr":
                 while (path == "" or bit_rate == 0) and channel <= N_channel-2:
                     channel += 1
                     path = self.find_best_snr(connection.input, connection.output, channel)
-                    bit_rate = self.calculate_bit_rate(path, self.nodes[connection.input].transceiver)
+                    path = path.split("->")
+                    lightpath = Lightpath(signal_power, list(path), channel)
+                    bit_rate = self.calculate_bit_rate(lightpath, self.nodes[connection.input].transceiver)
 
             if path == "" or bit_rate == 0:     # If path not reach min GSNR (ber = 0)the connection will be rejected!
                 connection.latency = 0
                 connection.snr = 0
             else:
                 # path_arrows = path
-                path = path.split("->")
-                signal_lightpath = Lightpath(signal_power, list(path), channel)
-                final_signal = self.propagate(signal_lightpath)
+                lightpath = Lightpath(signal_power, list(path), channel)
+                final_signal = self.propagate(lightpath)
 
                 # Update of route_space
                 # self._route_space.loc[self._route_space.path == path_arrows, 'CH_'+str(channel)] = 1
