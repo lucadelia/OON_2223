@@ -1,5 +1,5 @@
-from Signal_information import *
-from Constant_definition import *
+from core.Signal_information import *
+from core.Constant_definition import *
 
 
 # EXTENSION of the class Signal_information, accept the same input but also "channel" that is useful to define the

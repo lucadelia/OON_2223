@@ -4,6 +4,7 @@ class SignalInformation:
         self._path = path
         self._noise_power = 0  # noise initialized to zero
         self._latency = 0  # latency initialized to zero
+        self._inv_gsnr = 0
 
     # GETTER (return the value of the attributes)-------------------------------------------------------------------
     @property  # getter of "signal_power"
@@ -22,6 +23,10 @@ class SignalInformation:
     def path(self):
         return self._path
 
+    @property  # getter of "path"
+    def inv_gsnr(self):
+        return self._inv_gsnr
+
     # SETTER -------------------------------------------------------------------------------------------------------
     @signal_power.setter
     def signal_power(self, value):
@@ -39,6 +44,10 @@ class SignalInformation:
     def path(self, value):
         self._path = value
 
+    @inv_gsnr.setter
+    def inv_gsnr(self, value):
+        self._inv_gsnr = value
+
     # defined method to update the attributes of a defined quantities ----------------------------------------------
 
     def update_signal_power(self, value):
@@ -49,6 +58,9 @@ class SignalInformation:
 
     def update_latency(self, value):
         self.latency += value
+
+    def update_inv_gsnr(self, value):
+        self.inv_gsnr += value
 
     def update_path(self):
         self.path = self.path[1:]  # if I call this method, the path is updated and the new path stats from the

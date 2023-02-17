@@ -1,4 +1,4 @@
-from Line import *
+from core.Line import *
 
 
 class Node:
