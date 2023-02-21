@@ -1,0 +1,8 @@
+Average bit-rate for all the MC simulation: 331.39709041865893
+Average total capacitance necessary for all the connections: 36100.0
+Average MAXIMUM bit-rate for all the MC simulation: 400.0
+Average MINIMUM bit-rate for all the MC simulation: 100.0
+Average MAXIMUM latency for all the MC simulation: 0.010563906319519634
+Average MINIMUM latency for all the MC simulation: 0.0012727646774441006
+Average SNR Monte Carlo: 85.73017275647842
+Average number of rejected connections: 34
