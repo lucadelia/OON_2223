@@ -10,12 +10,28 @@ def get_max_bit_rate(connections):
     return max_br
 
 
+def get_max_lat(connections):
+    max_lat = 0
+    for conn in connections:
+        if conn.latency > max_lat:
+            max_lat = conn.latency
+    return max_lat
+
+
 def get_min_bit_rate(connections):
     min_br = sys.maxsize        # report the max size of the variable
     for conn in connections:
         if conn.bit_rate < min_br and conn.bit_rate != 0:
             min_br = conn.bit_rate
     return min_br
+
+
+def get_min_lat(connections):
+    min_lat = sys.maxsize        # report the max size of the variable
+    for conn in connections:
+        if conn.latency < min_lat and conn.latency != 0:
+            min_lat = conn.latency
+    return min_lat
 
 
 def get_average_bit_rate(connections):
@@ -46,10 +62,12 @@ def get_snr_conn(connections):
 
 def get_conn_rejected(connections):
     conn_rejected = 0
+    list_rejected = []
     for conn in connections:
         if conn.snr is None:
             conn_rejected += 1
-    return conn_rejected
+    list_rejected.append(conn_rejected)
+    return list_rejected
 
 
 def plot_distribution(connections, parameter, filename):
@@ -80,6 +98,17 @@ def plot_snr(values, parameter, title, filename):
 
     plt.figure()
     plt.hist(values, bins=20)
+    plt.xlabel(parameter)
+    plt.ylabel("Occurrences")
+    plt.title(title)
+    plt.savefig(filename)
+    plt.show()
+
+
+def plot_rejected(values, parameter, title, filename):
+
+    plt.figure()
+    plt.hist(values)
     plt.xlabel(parameter)
     plt.ylabel("Occurrences")
     plt.title(title)
