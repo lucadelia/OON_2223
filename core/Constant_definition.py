@@ -4,7 +4,7 @@ from scipy import special
 # Numpy function, is a library that contain the function "erfcinv" -> inverse of the complementary error function
 import numpy as np
 
-N_channel = 10
+N_channel = 6
 
 bn = 12.5e9             # Noise bandwidth [Hz]
 BERt = 1e-3             # Bit error rate (BER)

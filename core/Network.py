@@ -35,6 +35,8 @@ class Network:
                 node_dict['transceiver'] = self.data_dict[actual_node]['transceiver']
             else:
                 node_dict['transceiver'] = 'fixed_rate'  # Set to fixed_rate if not specified in the json
+                # node_dict['transceiver'] = 'flex_rate'
+                # node_dict['transceiver'] = 'shannon'   # TOO TIME CONSUMING! DON'T USE!
 
             self._nodes[actual_node] = Node(node_dict)
             # The json is scanned. The name of the Nodes, nodes that are connected and their position are saved.
@@ -57,13 +59,13 @@ class Network:
                 position_2 = np.array(self.data_dict[node_connected]['position'])
                 line_length = np.linalg.norm(position_1 - position_2)  # numpy method that calculate the distance
 
-                line_dict["label"] = line_label  # the line XY is saved in the line dictionary
-                line_dict["length"] = line_length  # same for the length
-                line_dict["amp_gain"] = amp_gain  # set the value gain of the amplifier
-                line_dict["amp_nf"] = amp_nf  # set the value noise figures of the amplifier
-                line_dict["alpha"] = alpha  # set the value alpha [dB]
-                line_dict["beta2"] = beta2  # set the value beta
-                line_dict["gamma"] = gamma  # set the value gamma
+                line_dict["label"] = line_label     # the line XY is saved in the line dictionary
+                line_dict["length"] = line_length   # same for the length
+                line_dict["amp_gain"] = amp_gain    # set the value gain of the amplifier
+                line_dict["amp_nf"] = amp_nf        # set the value noise figures of the amplifier
+                line_dict["alpha"] = alpha          # set the value alpha [dB]
+                line_dict["beta2"] = beta2          # set the value beta
+                line_dict["gamma"] = gamma          # set the value gamma
 
                 self._lines[line_label] = Line(line_dict)  # I give the dictionary to the "Line" class defined by label
 
@@ -468,7 +470,7 @@ class Network:
                 lightpath = Lightpath(signal_power, list(path), channel)
                 bit_rate = self.calculate_bit_rate(lightpath, self.nodes[connection.input].transceiver)
 
-            if path == "" or bit_rate == 0:  # If path not reach min GSNR (ber = 0)the connection will be rejected!
+            if path == "" or bit_rate == 0:  # If path not reach min GSNR (ber = 0) the connection will be rejected!
                 connection.latency = 0
                 connection.snr = None
             else:
