@@ -22,7 +22,7 @@ M = 3       # FIXED_RATE
 # M = 38    # SHANNON
 
 MC = 0          # index
-MC_runs = 3    # Number of Monte Carlo runs -> AT LEAST 20!
+MC_runs = 20    # Number of Monte Carlo runs -> AT LEAST 20!
 conn_list = []
 n_nodes = len(net.nodes)
 traffic_matrix = np.zeros((n_nodes, n_nodes))
@@ -84,7 +84,7 @@ list_nsr_MC = []
 i = 0
 for i in list_conn_list5:
     list_nsr_MC.extend(i)
-print(list_nsr_MC)
+# print(list_nsr_MC)
 plot_snr(list_nsr_MC, "SNR [dB]", "SNR Monte Carlo simulation", "../results/MC_method1/"+network_type+"/"+transceiver+"/SNR_MC.png")
 print("Average SNR Monte Carlo: " + str(mean(list_nsr_MC)))
 
@@ -92,7 +92,7 @@ list_rejected_MC = []
 j = 0
 for j in list_conn_list8:
     list_rejected_MC.extend(j)
-print(list_rejected_MC)
+# print(list_rejected_MC)
 plot_rejected(list_rejected_MC, "Number of rejected connections", "Rejected connection for MC runs", "../results/MC_method1/"+network_type+"/"+transceiver+"/rejected_conn_MC.png")
 print("Average number of rejected connections: " + str(mean(list_rejected_MC)))
 
