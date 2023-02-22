@@ -7,7 +7,7 @@ from core.functions import *
 network_type = "full_network"
 # network_type = "not_full_network"
 
-net = Network("../resources_exam/"+network_type+".json")            # FULL NODES
+net = Network("../resources_exam/"+network_type+".json")
 net.connect()
 net.weighted_paths_dataframe()
 net.route_space_dataframe()
@@ -48,7 +48,7 @@ for MC in range(MC_runs):
         list_conn_list4.append(get_min_bit_rate(conn_list) / 1e9)       # [Gbps]
         list_conn_list5.append(get_snr_conn(conn_list))                 # [dB]
         list_conn_list6.append(get_max_lat(conn_list))                  # [s]
-        list_conn_list7.append(get_min_lat(conn_list))                  # [s]
+        # list_conn_list7.append(get_min_lat(conn_list))                # [s]
         list_conn_list8.append(get_conn_rejected(conn_list))            # num of rejected
         net.reset_network()
     traffic_matrix = np.zeros((n_nodes, n_nodes))
@@ -76,8 +76,8 @@ plot_distribution_values(list_conn_list4, "Average MINIMUM bit_rate [Gbps]", "MI
 print("Average MINIMUM bit-rate for all the MC simulation: " + str(mean(list_conn_list4)))
 plot_distribution_values(list_conn_list6, "Average MAXIMUM latency [s]", "MAXIMUM Latency distribution", "../results/MC_method1/"+network_type+"/"+transceiver+"/average_MAX_latency_MC.png")
 print("Average MAXIMUM latency for all the MC simulation: " + str(mean(list_conn_list6)))
-plot_distribution_values(list_conn_list7, "Average MINIMUM latency [s]", "MINIMUM Latency distribution", "../results/MC_method1/"+network_type+"/"+transceiver+"/average_MIN_latency_MC.png")
-print("Average MINIMUM latency for all the MC simulation: " + str(mean(list_conn_list7)))
+# plot_distribution_values(list_conn_list7, "Average MINIMUM latency [s]", "MINIMUM Latency distribution", "../results/MC_method1/"+network_type+"/"+transceiver+"/average_MIN_latency_MC.png")
+# print("Average MINIMUM latency for all the MC simulation: " + str(mean(list_conn_list7)))
 
 # REMEMBER TO CHANGE IN THE FUNCTION THE NUMBER OF THE "BINS"
 list_nsr_MC = []

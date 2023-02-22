@@ -84,7 +84,6 @@ def plot_distribution(connections, parameter, filename):
 
 
 def plot_distribution_values(values, parameter, title, filename):
-
     plt.figure()
     plt.hist(values)
     plt.xlabel(parameter)
@@ -95,7 +94,6 @@ def plot_distribution_values(values, parameter, title, filename):
 
 
 def plot_snr(values, parameter, title, filename):
-
     plt.figure()
     plt.hist(values, bins=20)
     plt.xlabel(parameter)
@@ -106,11 +104,19 @@ def plot_snr(values, parameter, title, filename):
 
 
 def plot_rejected(values, parameter, title, filename):
-
     plt.figure()
     plt.hist(values)
     plt.xlabel(parameter)
     plt.ylabel("Occurrences")
+    plt.title(title)
+    plt.savefig(filename)
+    plt.show()
+
+
+def plot_graph(x_values, y_values, title, filename):
+    plt.plot(x_values, y_values)
+    plt.ylabel("Blocked Connections")
+    plt.xlabel("M value")
     plt.title(title)
     plt.savefig(filename)
     plt.show()

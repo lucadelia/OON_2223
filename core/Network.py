@@ -18,10 +18,10 @@ class Network:
         self._probe = None
         self._route_space = None
         self._data_dict = None  # Take the data from the json file
-        # FIRST: CONSTRUCTOR -> read the json (our network) and save all the parameters and give them to the classes----
+        # CONSTRUCTOR -> read the json (our network) and save all the parameters and give them to the classes-----------
 
-        with open(json_file, 'r') as read:  # the file that is passed to this class is read...
-            self.data_dict = json.load(read)  # ...and save the variable in a dictionary (must specify the path)
+        with open(json_file, 'r') as read:       # the file that is passed to this class is read...
+            self.data_dict = json.load(read)     # ...and save the variable in a dictionary (must specify the path)
 
         # Now dictionary for Node and Line must be set
         node_dict = {}
@@ -36,10 +36,10 @@ class Network:
             else:
                 node_dict['transceiver'] = 'fixed_rate'  # Set to fixed_rate if not specified in the json
                 # node_dict['transceiver'] = 'flex_rate'
-                # node_dict['transceiver'] = 'shannon'   # TOO TIME CONSUMING! DON'T USE!
+                # node_dict['transceiver'] = 'shannon'
 
             self._nodes[actual_node] = Node(node_dict)
-            # The json is scanned. The name of the Nodes, nodes that are connected and their position are saved.
+            # The json is scanned. The 'name' of the Nodes, 'nodes that are connected' and their 'position' are saved.
             # This information is saved in the node_dict{} dictionary. So, when the object of the class Network
             # is called at a specific position, that node is saved recalling the class node by passing the node_dict.
             # The class "Node" accept a dictionary in input that want the label, connected nodes and position.
@@ -124,7 +124,6 @@ class Network:
     def connect(self):
         for actual_node in self.nodes:
             self.nodes[actual_node].switching_matrix = {}  # empty dict for each node
-
             for node_connected in self.nodes[actual_node].connected_nodes:
                 line_label = actual_node + node_connected
                 self.nodes[actual_node].successive[line_label] = self.lines[line_label]  # nodes attached line
@@ -135,7 +134,7 @@ class Network:
     #   the "connect" method must connect the element lines and node (node needs dict of lines and vice-versa), so the
     #   "successive" method is called that update the line and the node (from the JSON).
 
-    # FOURTH: find_path -> given two node labels, returning all path that connect them as a list of label.--------------
+    # Given two node labels, returning all path that connect them as a list of label.-----------------------------------
     # The path have to cross nodes at least once.
     def find_path(self, start_node, stop_node):
         path = ""
@@ -157,7 +156,7 @@ class Network:
         else:
             return start_node
 
-    # FIFTH: propagate -> propagate the signal_information through the path specified and modified the information------
+    # Propagate the signal_information through the path specified and modified the information--------------------------
     def propagate(self, signal_information):
         start_node = signal_information.path[0]
         self.nodes[start_node].propagate(signal_information, None)
@@ -168,7 +167,7 @@ class Network:
         self.nodes[start_node].propagate_probe(signal_information)
         return signal_information
 
-    # SIXTH: Draw -> draw the network with matplotlib-------------------------------------------------------------------
+    # Draw the network with matplotlib----------------------------------------------------------------------------------
     def draw(self):
         plt.figure()  # create a new figure
         plt.grid()
@@ -402,7 +401,7 @@ class Network:
 
         while matrix_fully_requested is False and allocated_traffic is True:
             if cells_list == []:
-                allocated_traffic = False
+                allocated_traffic = False       # We don’t have to allocate more traffic.
                 cells_list = list(full_cells_list)
                 self.stream(conn_to_stream, signal_power, key="snr")
                 for connection in conn_to_stream:
@@ -450,10 +449,11 @@ class Network:
                         mask = np.bitwise_and(state_array, self.data_dict[actual_node]['switching_matrix'][start_node][stop_node])
                         self.nodes[actual_node].switching_matrix[start_node][stop_node] = mask
 
-    # STREAM METHOD -> for each element of a given list of instances of the class connection, sets lat and snr.---------
+    # For each element of a given list of instances of the class connection, sets lat and snr.--------------------------
     # This will be calculated by propagating a SignalInformation object
     # connection_list is a list of instances (=object) of class Connection
     def stream(self, connection_list, signal_power, key="latency"):  # latency set to default
+        # rejected = 0
         for connection in connection_list:  # with "connection" I cycle all the instances...
             path = ""
             channel = -1
@@ -473,6 +473,7 @@ class Network:
             if path == "" or bit_rate == 0:  # If path not reach min GSNR (ber = 0) the connection will be rejected!
                 connection.latency = 0
                 connection.snr = None
+                # rejected += 1
             else:
                 final_signal = self.propagate(lightpath)
 
@@ -483,6 +484,7 @@ class Network:
 
         self.restore_switching_matrix()
         self.route_space_update()
+        # return rejected
 
     # Reset line state arrays and nodes switching matrices--------------------------------------------------------------
     def reset_network(self):

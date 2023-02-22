@@ -10,7 +10,7 @@ class Node:
         self._switching_matrix = None
         self._transceiver = in_dict['transceiver']
 
-    # GETTER -------------------------------------------------------------------------------------------------------
+    # GETTER -----------------------------------------------------------------------------------------------------------
     @property
     def label(self):
         return self._label
@@ -35,7 +35,7 @@ class Node:
     def transceiver(self):
         return self._transceiver
 
-    # SETTER -------------------------------------------------------------------------------------------------------
+    # SETTER -----------------------------------------------------------------------------------------------------------
     @label.setter
     def label(self, value):
         self._label = value
@@ -68,14 +68,14 @@ class Node:
         if len(signal_information.path) != 0:  # condition to break the recursivity -> we want at least 2 elements
             if isinstance(signal_information, Lightpath) and prev_node is not None:
                 # None is an initialization that is valid only for the first time, then is = label[0]
-                # If the signal is propagated then the channel will be occupied
+                # If the signal is propagated then the channel will be occupied, so I write:
                 self.switching_matrix[prev_node][signal_information.path[0]][signal_information.channel] = 0
                 # then the channel is updated, so I have to block the previous and the next channels
                 # a verification is seen for the first and last channel that obv don't have prev and next channels.
                 # Unless they are...
-                if signal_information.channel != 0:
+                if signal_information.channel != 0:                 # If it’s not the first...(number of channel!!!!)
                     self.switching_matrix[prev_node][signal_information.path[0]][signal_information.channel-1] = 0
-                if signal_information.channel != N_channel-1:
+                if signal_information.channel != N_channel-1:       # ...or the last.
                     self.switching_matrix[prev_node][signal_information.path[0]][signal_information.channel+1] = 0
 
             next_line = self.label + signal_information.path[0]

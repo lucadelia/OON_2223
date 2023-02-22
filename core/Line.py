@@ -107,7 +107,6 @@ class Line:
         latency = self._length / ((2 / 3) * c)  # latency added to the signal due the line.
         return latency
 
-    # ------------------------------------------------------------------------------------------------------------------
     def noise_generation(self, signal_power):
         ASE_noise = self.ase_generation()
         NLI_noise = self.nli_generation(signal_power)

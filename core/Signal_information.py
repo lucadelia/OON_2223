@@ -1,15 +1,15 @@
 class SignalInformation:
-    def __init__(self, signal_power, path):  # constructor -> only signal_pow and path take values from the outside
+    def __init__(self, signal_power, path):  # constructor -> only signal_power and path take values from the outside
         self._signal_power = signal_power
         self._path = path
         self._noise_power = 0  # noise initialized to zero
         self._latency = 0  # latency initialized to zero
         self._inv_gsnr = 0
 
-    # GETTER (return the value of the attributes)-------------------------------------------------------------------
+    # GETTER (return the value of the attributes)-----------------------------------------------------------------------
     @property  # getter of "signal_power"
     def signal_power(self):
-        return self._signal_power  # return the attributes signal_power of the object
+        return self._signal_power           # return the attributes signal_power of the object
 
     @property  # getter of "noise_power"
     def noise_power(self):
@@ -23,11 +23,11 @@ class SignalInformation:
     def path(self):
         return self._path
 
-    @property  # getter of "path"
+    @property
     def inv_gsnr(self):
         return self._inv_gsnr
 
-    # SETTER -------------------------------------------------------------------------------------------------------
+    # SETTER -----------------------------------------------------------------------------------------------------------
     @signal_power.setter
     def signal_power(self, value):
         self._signal_power = value
@@ -48,7 +48,7 @@ class SignalInformation:
     def inv_gsnr(self, value):
         self._inv_gsnr = value
 
-    # defined method to update the attributes of a defined quantities ----------------------------------------------
+    # Defined method to update the attributes of a defined quantities --------------------------------------------------
 
     def update_signal_power(self, value):
         self.signal_power += value
